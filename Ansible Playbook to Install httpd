@@ -1,0 +1,19 @@
+---
+- name: Webserver setup
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Install httpd
+      ansible.builtin.yum:
+        name: httpd
+        state: present
+    - name: Start service
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enable: yes
+
+    - name: copy zip file
+      copy:
+      src: "sourcefilepath"
+      dest: "destinationfilepath"
