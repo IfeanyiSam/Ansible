@@ -1,6 +1,6 @@
 ---
 
-- name: deploy gottojob website
+- name: deploy moso-interior website
   hosts: all
   become: yes
   become_user: root
