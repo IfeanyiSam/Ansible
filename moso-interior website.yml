@@ -10,7 +10,7 @@
       yum:
         name: "*"
         state: latest
-        update_cache:yes
+        update_cache: yes
 
     - name: install apache server
       yum:
@@ -22,29 +22,29 @@
 
     - name: download web files from tooplate
       get_url:
-        url: https://www.tooplate.com/zip-templates/2134_gotto_job.zip
+        url: https://www.tooplate.com/zip-templates/2133_moso_interior.zip
         dest: /var/www/html/
 
     - name: unzip the zip folder
       ansible.builtin.unarchive:
-        src: /var/www/html/2134_gotto_job.zip
+        src: /var/www/html/2133_moso_interior.zip
         dest: /var/www/html
         remote_src: yes
 
-    - name: copy webfiles from the 2134_gotto_job directory to the html directory
+    - name: copy webfiles from the 2133_moso_interior directory to the html directory
       copy:
-        src: /var/www/html/2134_gotto_job/
+        src: /var/www/html/2133_moso_interior/
         dest: /var/www/html/
         remote_src: yes
 
-    - name: remove the 2134_gotto_job directory
+    - name: remove the 2133_moso_interior directory
       file:
-        path: /var/www/html/2134_gotto_job
+        path: /var/www/html/2133_moso_interior
         state: absent
 
-    - name: remove the 2134_gotto_job.zip directory
+    - name: remove the 2133_moso_interior.zip directory
       file:
-        path: /var/www/html/2134_gotto_job.zip
+        path: /var/www/html/2133_moso_interior.zip
         state: absent
 
 
