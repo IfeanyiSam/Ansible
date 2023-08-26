@@ -1,19 +1,28 @@
 ---
 - name: Deploy EC2 Instances, Install Services, and Deploy Static Website
   hosts: localhost
-  gather_facts: false
+  gather_facts: true
   tasks:
+    # Create an SSH key pair to use for instances
     - name: Create Key Pair
       ec2_key:
-        region: "{{ aws_region }}"
-        name: my_key_pair
+        region: "{{ aws_region }}"  # Replace with your AWS region, e.g., us-east-1
+        name: my_key_pair  # Provide a name for your key pair
       register: key_pair
 
+<<<<<<< HEAD
     # Create a CentOS instance with IAM role
     - name: Create CentOS instance with IAM role
       ec2:
         region: "{{ aws_region }}"  # Replace with your AWS region, e.g., us-east-1
         key_name: "{{ key_pair.key_name }}"  # Use the name of the key pair created above
+=======
+    # Create a CentOS instance if the target system is CentOS
+    - name: Create CentOS instance
+      ec2:
+        region: "{{ aws_region }}"  # Replace with your AWS region, e.g., us-east-1
+        key_name: my_key_pair  # Use the name of the key pair created above
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
         instance_type: t2.micro  # Specify your desired instance type
         image: "{{ centos_image }}"  # Replace with CentOS AMI ID for your region
         count: 1
@@ -21,6 +30,7 @@
           Name: CentOS_Instance  # Tag your instance with a name
         security_groups:
           - my_security_group  # Replace with actual security group name or ID
+<<<<<<< HEAD
         iam_instance_profile:
           name: my_iam_role  # Name of the IAM role for the instance
 
@@ -29,6 +39,16 @@
       ec2:
         region: "{{ aws_region }}"  # Replace with your AWS region, e.g., us-east-1
         key_name: "{{ key_pair.key_name }}"  # Use the name of the key pair created above
+=======
+      register: centos_instance
+      when: "'CentOS' in ansible_distribution"  # Conditionally create only on CentOS
+
+    # Create an Ubuntu instance if the target system is Ubuntu
+    - name: Create Ubuntu instance
+      ec2:
+        region: "{{ aws_region }}"  # Replace with your AWS region, e.g., us-east-1
+        key_name: my_key_pair  # Use the name of the key pair created above
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
         instance_type: t2.micro  # Specify your desired instance type
         image: "{{ ubuntu_image }}"  # Replace with Ubuntu AMI ID for your region
         count: 1
@@ -36,18 +56,31 @@
           Name: Ubuntu_Instance  # Tag your instance with a name
         security_groups:
           - my_security_group  # Replace with actual security group name or ID
+<<<<<<< HEAD
         iam_instance_profile:
           name: my_iam_role  # Name of the IAM role for the instance
 
     # Install packages based on OS distribution
     - name: Install packages based on OS distribution
+=======
+      register: ubuntu_instance
+      when: "'Ubuntu' in ansible_distribution"  # Conditionally create only on Ubuntu
+
+    # Install packages based on OS distribution (httpd for CentOS, apache2 for Ubuntu)
+    - name: Install packages
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
       package:
         name: "{{ item }}"
         state: present
       loop:
         - "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
+<<<<<<< HEAD
         - unzip
         - wget
+=======
+        - unzip   # Add unzip package
+        - wget    # Add wget package
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
 
     # Start and enable the web server service based on OS distribution
     - name: Start and enable the web server service
@@ -55,7 +88,12 @@
         name: "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
         state: started
         enabled: yes
+<<<<<<< HEAD
       when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
+=======
+      loop:
+        - "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
 
     # Create a directory for the website files
     - name: Create website directory
@@ -64,13 +102,18 @@
         state: directory
       when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
+<<<<<<< HEAD
     # Download website files from a URL and unzip them
+=======
+    # Download website files from a URL
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
     - name: Download website files
       get_url:
         url: "http://example.com/static_website.zip"  # Replace with actual URL
         dest: /tmp/static_website.zip
       when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
+    # Unzip the website files to the web server directory
     - name: Unzip website files
       unarchive:
         src: /tmp/static_website.zip
@@ -87,11 +130,21 @@
         group: apache  # Replace with appropriate user/group
       when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
+<<<<<<< HEAD
     # Restart the web server service to apply changes
     - name: Restart web server
+=======
+    # Restart the web server service
+    - name: Restart Apache
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
       service:
         name: "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
         state: restarted
+<<<<<<< HEAD
       when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
 # You can repeat the above block for additional instances or tasks as needed.
+=======
+      loop:
+        - "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
+>>>>>>> 12a8434b444c806e2411fe9a5b107739a260e1e5
