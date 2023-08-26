@@ -95,4 +95,3 @@
         state: restarted
       when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
-# You can repeat the above block for additional instances or tasks as needed.
