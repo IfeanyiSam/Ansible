@@ -1,0 +1,87 @@
+---
+- name: Deploy EC2 Instances, Install Services, and Deploy Static Website
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Create Key Pair
+      ec2_key:
+        region: "{{ aws_region }}"
+        name: my_key_pair
+      register: key_pair
+
+    - name: Create CentOS instance with IAM role
+      ec2:
+        region: "{{ aws_region }}"
+        key_name: my_key_pair
+        instance_type: t2.micro
+        image: "{{ centos_image }}"
+        count: 1
+        instance_tags:
+          Name: CentOS_Instance
+        security_groups:
+          - my_security_group  # Replace with actual security group name or ID
+        iam_instance_profile:
+          name: my_iam_role
+      register: centos_instance
+
+    - name: Create Ubuntu instance with IAM role
+      ec2:
+        region: "{{ aws_region }}"
+        key_name: my_key_pair
+        instance_type: t2.micro
+        image: "{{ ubuntu_image }}"
+        count: 1
+        instance_tags:
+          Name: Ubuntu_Instance
+        security_groups:
+          - my_security_group  # Replace with actual security group name or ID
+        iam_instance_profile:
+          name: my_iam_role
+      register: ubuntu_instance
+
+    - name: Install packages
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - "{{ 'httpd' if ansible_distribution == 'CentOS' else 'apache2' }}" # Conditional package installation
+        - unzip   # Add unzip package
+        - wget    # Add wget package
+
+    - name: Start and enable the web server service
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - "{{ 'httpd' if ansible_distribution == 'CentOS' else 'apache2' }}" # Conditional service start
+
+    - name: Create website directory
+      file:
+        path: /var/www/html/
+        state: directory
+
+    - name: Download website files
+      get_url:
+        url: "http://example.com/static_website.zip"  # Replace with actual URL
+        dest: /tmp/static_website.zip
+
+    - name: Unzip website files
+      unarchive:
+        src: /tmp/static_website.zip
+        dest: /var/www/html/
+        remote_src: yes
+
+    - name: Set proper permissions
+      file:
+        path: /var/www/html/
+        recurse: yes
+        owner: apache  # Replace with appropriate user/group
+        group: apache  # Replace with appropriate user/group
+
+    - name: Restart Apache
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - "{{ 'httpd' if ansible_distribution == 'CentOS' else 'apache2' }}" # Conditional service restart
