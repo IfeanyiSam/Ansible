@@ -9,79 +9,89 @@
         name: my_key_pair
       register: key_pair
 
+    # Create a CentOS instance with IAM role
     - name: Create CentOS instance with IAM role
       ec2:
-        region: "{{ aws_region }}"
-        key_name: my_key_pair
-        instance_type: t2.micro
-        image: "{{ centos_image }}"
+        region: "{{ aws_region }}"  # Replace with your AWS region, e.g., us-east-1
+        key_name: "{{ key_pair.key_name }}"  # Use the name of the key pair created above
+        instance_type: t2.micro  # Specify your desired instance type
+        image: "{{ centos_image }}"  # Replace with CentOS AMI ID for your region
         count: 1
         instance_tags:
-          Name: CentOS_Instance
+          Name: CentOS_Instance  # Tag your instance with a name
         security_groups:
           - my_security_group  # Replace with actual security group name or ID
         iam_instance_profile:
-          name: my_iam_role
-      register: centos_instance
+          name: my_iam_role  # Name of the IAM role for the instance
 
+    # Create an Ubuntu instance with IAM role
     - name: Create Ubuntu instance with IAM role
       ec2:
-        region: "{{ aws_region }}"
-        key_name: my_key_pair
-        instance_type: t2.micro
-        image: "{{ ubuntu_image }}"
+        region: "{{ aws_region }}"  # Replace with your AWS region, e.g., us-east-1
+        key_name: "{{ key_pair.key_name }}"  # Use the name of the key pair created above
+        instance_type: t2.micro  # Specify your desired instance type
+        image: "{{ ubuntu_image }}"  # Replace with Ubuntu AMI ID for your region
         count: 1
         instance_tags:
-          Name: Ubuntu_Instance
+          Name: Ubuntu_Instance  # Tag your instance with a name
         security_groups:
           - my_security_group  # Replace with actual security group name or ID
         iam_instance_profile:
-          name: my_iam_role
-      register: ubuntu_instance
+          name: my_iam_role  # Name of the IAM role for the instance
 
-    - name: Install packages
+    # Install packages based on OS distribution
+    - name: Install packages based on OS distribution
       package:
         name: "{{ item }}"
         state: present
       loop:
-        - "{{ 'httpd' if ansible_distribution == 'CentOS' else 'apache2' }}" # Conditional package installation
-        - unzip   # Add unzip package
-        - wget    # Add wget package
+        - "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
+        - unzip
+        - wget
 
+    # Start and enable the web server service based on OS distribution
     - name: Start and enable the web server service
       service:
-        name: "{{ item }}"
+        name: "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
         state: started
         enabled: yes
-      loop:
-        - "{{ 'httpd' if ansible_distribution == 'CentOS' else 'apache2' }}" # Conditional service start
+      when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
+    # Create a directory for the website files
     - name: Create website directory
       file:
         path: /var/www/html/
         state: directory
+      when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
+    # Download website files from a URL and unzip them
     - name: Download website files
       get_url:
         url: "http://example.com/static_website.zip"  # Replace with actual URL
         dest: /tmp/static_website.zip
+      when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
     - name: Unzip website files
       unarchive:
         src: /tmp/static_website.zip
         dest: /var/www/html/
         remote_src: yes
+      when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
+    # Set proper permissions for the web server directory
     - name: Set proper permissions
       file:
         path: /var/www/html/
         recurse: yes
         owner: apache  # Replace with appropriate user/group
         group: apache  # Replace with appropriate user/group
+      when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
 
-    - name: Restart Apache
+    # Restart the web server service to apply changes
+    - name: Restart web server
       service:
-        name: "{{ item }}"
+        name: "{{ 'httpd' if 'CentOS' in ansible_distribution else 'apache2' }}"
         state: restarted
-      loop:
-        - "{{ 'httpd' if ansible_distribution == 'CentOS' else 'apache2' }}" # Conditional service restart
+      when: "'CentOS' in ansible_distribution or 'Ubuntu' in ansible_distribution"
+
+# You can repeat the above block for additional instances or tasks as needed.
